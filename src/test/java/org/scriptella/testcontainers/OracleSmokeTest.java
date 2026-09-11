@@ -18,9 +18,9 @@ package org.scriptella.testcontainers;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.EnabledIfSystemProperty;
-import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.oracle.OracleContainer;
 import org.testcontainers.utility.DockerImageName;
 import scriptella.execution.EtlExecutor;
 import scriptella.execution.EtlExecutorException;
@@ -34,93 +34,71 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Timestamp;
+import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Runs the shared Scriptella compatibility smoke contract against PostgreSQL.
- *
- * <p>The test uses one container for the class, loads the PostgreSQL-specific
- * schema, inserts representative source values through the vendor JDBC
- * driver, copies them through a checked-in Scriptella ETL fixture, and then
- * verifies the destination independently through JDBC.</p>
+ * Runs the shared Scriptella compatibility smoke contract against Oracle Free.
  */
 @Testcontainers
-@EnabledIfSystemProperty(named = "database", matches = "(?i)postgresql|all")
-class PostgreSqlSmokeTest {
-    private static final String IMAGE = imageProperty("postgresql.image");
+@EnabledIfSystemProperty(named = "database", matches = "(?i)oracle|all")
+class OracleSmokeTest {
+    private static final String IMAGE = imageProperty("oracle.image");
     private static final String USER = "scriptella";
     private static final String PASSWORD = "scriptella";
     private static final LocalDateTime EXPECTED_TIMESTAMP = LocalDateTime.of(2025, 1, 2, 3, 4, 5);
 
     @Container
-    private static final PostgreSQLContainer<?> POSTGRES = new PostgreSQLContainer<>(
-            DockerImageName.parse(IMAGE))
-            .withDatabaseName("scriptella")
+    private static final OracleContainer ORACLE = new OracleContainer(DockerImageName.parse(IMAGE))
             .withUsername(USER)
-            .withPassword(PASSWORD);
+            .withPassword(PASSWORD)
+            .withStartupTimeout(Duration.ofMinutes(10));
 
-    /**
-     * Creates both tables from the checked-in PostgreSQL SQL fixture and seeds
-     * the source through JDBC so the ETL copy can be checked independently.
-     */
     @BeforeAll
     static void createSchemaAndSourceRows() throws SQLException, IOException {
-        try (Connection connection = POSTGRES.createConnection("")) {
-            executeSqlScript(connection, "/sql/postgresql/schema.sql");
+        try (Connection connection = ORACLE.createConnection("")) {
+            executeSqlScript(connection, "/sql/oracle/schema.sql");
             insertSourceRows(connection);
         }
     }
 
-    /**
-     * Proves both the successful copy and transaction rollback behavior.
-     *
-     * <p>The rollback fixture first inserts a valid destination row and then
-     * executes an insert into a nonexistent table. Scriptella must roll back
-     * the already-executed insert; the final JDBC query verifies that row 999
-     * is absent while the three committed copy rows remain.</p>
-     */
     @Test
     void copiesRepresentativeRowsAndRollsBackFailedTransaction() throws Exception {
-        executeFixture("/etl/postgresql-copy.etl.xml");
+        executeFixture("/etl/oracle-copy.etl.xml");
 
-        try (Connection connection = POSTGRES.createConnection("")) {
+        try (Connection connection = ORACLE.createConnection("")) {
             assertDestinationRows(connection);
         }
 
         assertThrows(EtlExecutorException.class,
-                () -> executeFixture("/etl/postgresql-rollback.etl.xml"));
+                () -> executeFixture("/etl/oracle-rollback.etl.xml"));
 
-        try (Connection connection = POSTGRES.createConnection("")) {
+        try (Connection connection = ORACLE.createConnection("")) {
             assertEquals(3, countRows(connection, "etl_destination"));
             assertEquals(0, countRowsWhereId(connection, "etl_destination", 999));
         }
     }
 
-    /**
-     * Runs one checked-in ETL document with the container's dynamic JDBC URL.
-     */
     private static void executeFixture(String resource) throws Exception {
         Map<String, Object> properties = new HashMap<>();
-        properties.put("source.url", POSTGRES.getJdbcUrl());
-        properties.put("source.user", USER);
-        properties.put("source.password", PASSWORD);
-        properties.put("destination.url", POSTGRES.getJdbcUrl());
-        properties.put("destination.user", USER);
-        properties.put("destination.password", PASSWORD);
+        properties.put("source.url", ORACLE.getJdbcUrl());
+        properties.put("source.user", ORACLE.getUsername());
+        properties.put("source.password", ORACLE.getPassword());
+        properties.put("destination.url", ORACLE.getJdbcUrl());
+        properties.put("destination.user", ORACLE.getUsername());
+        properties.put("destination.password", ORACLE.getPassword());
 
         EtlExecutor.newExecutor(resourceUrl(resource), properties).execute();
     }
 
-    /**
-     * Inserts values with JDBC types rather than string-substituted SQL.
-     */
     private static void insertSourceRows(Connection connection) throws SQLException {
         String sql = "INSERT INTO etl_source "
                 + "(id, amount, description, unicode_text, nullable_value, happened_at) "
@@ -148,9 +126,6 @@ class PostgreSqlSmokeTest {
         statement.executeUpdate();
     }
 
-    /**
-     * Reads every copied column through JDBC and checks its persisted value.
-     */
     private static void assertDestinationRows(Connection connection) throws SQLException {
         String sql = "SELECT id, amount, description, unicode_text, nullable_value, happened_at "
                 + "FROM etl_destination ORDER BY id";
@@ -171,7 +146,7 @@ class PostgreSqlSmokeTest {
             throw new AssertionError("Destination is missing row " + id);
         }
         assertEquals(id, resultSet.getInt("id"));
-        assertEquals(new BigDecimal(amount), resultSet.getBigDecimal("amount"));
+        assertEquals(0, new BigDecimal(amount).compareTo(resultSet.getBigDecimal("amount")));
         assertEquals(description, resultSet.getString("description"));
         assertEquals(unicodeText, resultSet.getString("unicode_text"));
         if (nullableValue == null) {
@@ -201,9 +176,6 @@ class PostgreSqlSmokeTest {
         }
     }
 
-    /**
-     * Executes the small semicolon-delimited setup fixture.
-     */
     private static void executeSqlScript(Connection connection, String resource)
             throws IOException, SQLException {
         String script;
@@ -212,7 +184,7 @@ class PostgreSqlSmokeTest {
         }
         String executableSql = script.lines()
                 .filter(line -> !line.stripLeading().startsWith("--"))
-                .collect(java.util.stream.Collectors.joining("\n"));
+                .collect(Collectors.joining("\n"));
         for (String statementText : executableSql.split(";")) {
             String statement = statementText.trim();
             if (!statement.isEmpty()) {
@@ -224,7 +196,7 @@ class PostgreSqlSmokeTest {
     }
 
     private static java.net.URL resourceUrl(String resource) {
-        java.net.URL url = PostgreSqlSmokeTest.class.getResource(resource);
+        java.net.URL url = OracleSmokeTest.class.getResource(resource);
         if (url == null) {
             throw new IllegalArgumentException("Missing test resource: " + resource);
         }
@@ -232,7 +204,7 @@ class PostgreSqlSmokeTest {
     }
 
     private static InputStream resourceStream(String resource) {
-        InputStream input = PostgreSqlSmokeTest.class.getResourceAsStream(resource);
+        InputStream input = OracleSmokeTest.class.getResourceAsStream(resource);
         if (input == null) {
             throw new IllegalArgumentException("Missing test resource: " + resource);
         }

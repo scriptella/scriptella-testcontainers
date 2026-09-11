@@ -14,8 +14,26 @@ job. SQL Server is not supported locally on Apple Silicon.
 - Maven 3.9 or later; and
 - a Testcontainers-compatible Docker runtime.
 
-The PostgreSQL smoke test is the first Phase 2 target. The other database
-targets will be added in later phases.
+### Local macOS with Colima
+
+Colima is the preferred Docker runtime for local macOS development. The
+complete suite includes resource-intensive Oracle Free and SQL Server images;
+the recommended shared VM configuration is:
+
+```shell
+colima start --cpus 4 --memory 4 --disk 20
+```
+
+Colima can increase an existing VM's disk size but cannot shrink it. Point
+Testcontainers at Colima's socket before running the suite:
+
+```shell
+export DOCKER_HOST="unix://${HOME}/.colima/default/docker.sock"
+export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
+```
+
+PostgreSQL, MariaDB, and Oracle Free currently implement the shared smoke-test
+contract. The SQL Server target will be added in a later phase.
 
 Run the project from this directory with:
 
@@ -27,6 +45,24 @@ Run the PostgreSQL target explicitly with:
 
 ```shell
 mvn verify -Ddatabase=postgresql
+```
+
+Run MariaDB by itself with:
+
+```shell
+mvn verify -Ddatabase=mariadb
+```
+
+Run Oracle Free by itself with:
+
+```shell
+mvn verify -Ddatabase=oracle
+```
+
+Run all currently implemented database tests sequentially with:
+
+```shell
+mvn verify -Ddatabase=all
 ```
 
 The default `scriptella.version` is the latest stable Scriptella version used
@@ -52,10 +88,10 @@ Each database target has three small pieces:
   database connection alias and row-copy pattern; and
 - database-specific setup SQL under `src/test/resources/sql`.
 
-The PostgreSQL rollback fixture deliberately performs one valid write and then
-fails on a second write. The test checks through a fresh JDBC connection that
-Scriptella rolled back the first write as well. New database tests should keep
-this separation: use Scriptella for the ETL behavior and the vendor driver for
+Each rollback fixture deliberately performs one valid write and then fails on
+a second write. The test checks through a fresh JDBC connection that Scriptella
+rolled back the first write as well. New database tests should keep this
+separation: use Scriptella for the ETL behavior and the vendor driver for
 independent setup and assertions.
 
 ## Pinned targets
