@@ -42,6 +42,15 @@ case "$database_selector" in
     ;;
 esac
 
+for argument in "$@"; do
+    case "$argument" in
+        -Ddatabase|-Ddatabase=*)
+            echo "Error: -Ddatabase is owned by run-db-test.sh; select the database as the first argument." >&2
+            exit 2
+            ;;
+    esac
+done
+
 script_dir="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
 cd "$script_dir"
 

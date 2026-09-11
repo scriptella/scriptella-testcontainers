@@ -67,6 +67,13 @@ version, and JDBC driver version before the Maven output. The configured
 `scriptella.version` and driver properties are resolved from Maven, including
 any command-line overrides.
 
+The database selector is owned by the wrapper; do not pass a forwarded
+`-Ddatabase` argument.
+
+GitHub Actions runs the same wrapper in one parallel Linux job per database.
+The `scriptella-etl` workflow also installs its current source locally and runs
+this suite against that `1.6-SNAPSHOT` build.
+
 For direct Maven debugging, the underlying commands remain available. For
 example, run PostgreSQL with:
 
