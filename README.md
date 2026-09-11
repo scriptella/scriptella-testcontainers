@@ -74,6 +74,19 @@ GitHub Actions runs the same wrapper in one parallel Linux job per database.
 The `scriptella-etl` workflow also installs its current source locally and runs
 this suite against that `1.6-SNAPSHOT` build.
 
+## Test status for Scriptella 1.5 (latest release)
+
+| Database | Container image | Result |
+| --- | --- | --- |
+| PostgreSQL | `postgres:17.11-alpine3.24` | ✅ PASS |
+| MariaDB | `mariadb:11.8.8` | ✅ PASS |
+| Oracle Free | `gvenzl/oracle-free:23.26.2-slim-faststart` | ✅ PASS |
+| SQL Server | `mcr.microsoft.com/mssql/server:2022-CU26-ubuntu-22.04` | ✅ PASS |
+
+[Compatibility history](docs/compatibility-results.md)
+
+## Direct Maven debugging
+
 For direct Maven debugging, the underlying commands remain available. For
 example, run PostgreSQL with:
 
