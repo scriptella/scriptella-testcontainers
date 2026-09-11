@@ -14,13 +14,19 @@ job. SQL Server is not supported locally on Apple Silicon.
 - Maven 3.9 or later; and
 - a Testcontainers-compatible Docker runtime.
 
-Phase 1 establishes the build and resource layout. The live database smoke
-tests will be added in the next phase.
+The PostgreSQL smoke test is the first Phase 2 target. The other database
+targets will be added in later phases.
 
 Run the project from this directory with:
 
 ```shell
 mvn verify
+```
+
+Run the PostgreSQL target explicitly with:
+
+```shell
+mvn verify -Ddatabase=postgresql
 ```
 
 The default `scriptella.version` is the latest stable Scriptella version used
@@ -35,6 +41,22 @@ mvn verify -Dscriptella.version=1.6-SNAPSHOT
 
 The override selects the same version for both `scriptella-core` and
 `scriptella-drivers`.
+
+## Test layout
+
+Each database target has three small pieces:
+
+- a JUnit test under `src/test/java` that starts one shared container, seeds
+  and verifies data with the vendor JDBC driver, and runs the Scriptella ETL;
+- one or more ETL fixtures under `src/test/resources/etl` showing the
+  database connection alias and row-copy pattern; and
+- database-specific setup SQL under `src/test/resources/sql`.
+
+The PostgreSQL rollback fixture deliberately performs one valid write and then
+fails on a second write. The test checks through a fresh JDBC connection that
+Scriptella rolled back the first write as well. New database tests should keep
+this separation: use Scriptella for the ETL behavior and the vendor driver for
+independent setup and assertions.
 
 ## Pinned targets
 

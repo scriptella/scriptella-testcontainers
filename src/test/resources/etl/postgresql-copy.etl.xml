@@ -1,0 +1,26 @@
+<!DOCTYPE etl SYSTEM "http://scriptella.org/dtd/etl.dtd">
+<!-- Read etl_source and insert each row into etl_destination through Scriptella's "postgresql" driver alias. -->
+<etl>
+    <connection id="source"
+                driver="postgresql"
+                url="${source.url}"
+                user="${source.user}"
+                password="${source.password}"/>
+    <connection id="destination"
+                driver="postgresql"
+                url="${destination.url}"
+                user="${destination.user}"
+                password="${destination.password}"/>
+
+    <!-- The nested script runs once for each row returned by the source query. -->
+    <query connection-id="source">
+        SELECT id, amount, description, unicode_text, nullable_value, happened_at
+        FROM etl_source
+        ORDER BY id
+        <script connection-id="destination">
+            INSERT INTO etl_destination
+                (id, amount, description, unicode_text, nullable_value, happened_at)
+            VALUES (?id, ?amount, ?description, ?unicode_text, ?nullable_value, ?happened_at)
+        </script>
+    </query>
+</etl>
