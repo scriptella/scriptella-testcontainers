@@ -23,7 +23,8 @@ import java.util.Set;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Prevents an invalid database selector from silently skipping every smoke test.
+ * Prevents an invalid database selector from silently skipping every database
+ * compatibility test.
  */
 class DatabaseSelectorTest {
     private static final Set<String> SUPPORTED_DATABASES = Set.of(

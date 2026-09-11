@@ -1,5 +1,6 @@
 target/
 .agent-logs/
+reports/
 .idea/
 .vscode/
 *.iml

@@ -46,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Runs the shared Scriptella compatibility smoke contract against Oracle Free.
+ * Runs the shared Scriptella compatibility-test contract against Oracle Free.
  */
 @Testcontainers
 @EnabledIfSystemProperty(named = "database", matches = "(?i)oracle|all")

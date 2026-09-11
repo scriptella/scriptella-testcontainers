@@ -25,7 +25,7 @@
     <packaging>jar</packaging>
 
     <name>Scriptella Testcontainers</name>
-    <description>Public real-database compatibility smoke tests for Scriptella</description>
+    <description>Real-database compatibility tests for Scriptella, powered by Testcontainers</description>
     <url>https://github.com/scriptella/scriptella-testcontainers</url>
 
     <licenses>

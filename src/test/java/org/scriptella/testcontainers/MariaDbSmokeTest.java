@@ -44,7 +44,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
- * Runs the shared Scriptella compatibility smoke contract against MariaDB.
+ * Runs the shared Scriptella compatibility-test contract against MariaDB.
  */
 @Testcontainers
 @EnabledIfSystemProperty(named = "database", matches = "(?i)mariadb|all")
