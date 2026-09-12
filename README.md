@@ -1,8 +1,9 @@
 # Scriptella Testcontainers
 
 Scriptella Testcontainers is a public real-database compatibility suite for
-Scriptella. It uses Testcontainers to run meaningful ETL compatibility tests
-against PostgreSQL, MariaDB, Oracle Free, and Microsoft SQL Server.
+[Scriptella](https://github.com/scriptella/scriptella-etl). It uses
+Testcontainers to run meaningful ETL compatibility tests against PostgreSQL,
+MariaDB, Oracle Free, and Microsoft SQL Server.
 
 The suite targets Java 17 and uses one Maven module. Database tests run
 sequentially on developer machines; CI will run each database in its own Linux
