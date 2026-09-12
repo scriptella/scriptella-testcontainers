@@ -76,6 +76,8 @@ this suite against that `1.6-SNAPSHOT` build.
 
 ## Test status for Scriptella 1.5 (latest release)
 
+[![DB CI pipeline: PG, MariaDB, Oracle, MSSQL](docs/scriptella-testcontainers-tested.svg)](https://github.com/scriptella/scriptella-testcontainers)
+
 | Database | Container image | Result |
 | --- | --- | --- |
 | PostgreSQL | `postgres:17.11-alpine3.24` | ✅ PASS |
