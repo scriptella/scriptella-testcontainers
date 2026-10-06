@@ -75,9 +75,9 @@ GitHub Actions runs the same wrapper in one parallel Linux job per database.
 The `scriptella-etl` workflow also installs its current source locally and runs
 this suite against that `1.6-SNAPSHOT` build.
 
-## Test status for Scriptella 1.5 (latest release)
+## Test status for Scriptella 1.6 (latest release)
 
-[![DB CI pipeline: PG, MariaDB, Oracle, MSSQL](docs/scriptella-testcontainers-tested.svg)](https://github.com/scriptella/scriptella-testcontainers)
+[![DB CI pipeline: PG, MariaDB, Oracle, MSSQL](docs/scriptella-testcontainers-tested.svg)](https://github.com/scriptella/scriptella-testcontainers/blob/main/docs/compatibility-results.md#2026-10-05--scriptella-16)
 
 | Database | Container image | Result |
 | --- | --- | --- |
